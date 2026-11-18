@@ -1,6 +1,6 @@
-# Rotina — Atendimento Interno
+# Felini Organiza — Atendimento Interno
 
-Sistema web responsivo para organizar o atendimento de um escritório de contabilidade. Registra o que aconteceu no dia, acompanha pendências e facilita a passagem de turno entre atendentes.
+Sistema web responsivo para organizar o atendimento de um escritório de contabilidade. Registra o que aconteceu no dia, acompanha pendências e facilita a passagem de turno entre atendentes. O app oferece tema claro e modo escuro em azul-marinho.
 
 Os dados são compartilhados entre os computadores pelo Supabase. Cada atendente acessa o sistema com seu próprio login.
 
@@ -13,6 +13,9 @@ Os dados são compartilhados entre os computadores pelo Supabase. Cada atendente
 - Nomes da equipe e escala editáveis no próprio sistema.
 - Ciclo de ausência configurável: três dias de cobertura a cada quinze dias.
 - Layout responsivo para computador e celular.
+- Alternância entre tema claro e modo escuro azul-marinho, com preferência salva no navegador.
+- Lista compartilhada de links úteis, com título, endereço e observação.
+- Lembretes recorrentes diários ou mensais, com opção de marcar como feito no dia.
 - Login individual e dados compartilhados em banco Supabase com regras de acesso.
 
 ## Tecnologias
@@ -28,6 +31,8 @@ Os dados são compartilhados entre os computadores pelo Supabase. Cada atendente
 | --- | --- |
 | `index.html` | Estrutura da aplicação e telas de login e cadastro. |
 | `styles.css` | Aparência e adaptação para telas menores. |
+| `themes.css` | Alternância entre os temas claro e azul-marinho escuro. |
+| `features.css` | Aparência das telas de links úteis e lembretes. |
 | `app.js` | Ações da aplicação e conexão com o Supabase. |
 | `config.js` | URL e chave pública do projeto Supabase. |
 | `config.example.js` | Modelo de configuração para outro projeto. |
@@ -55,6 +60,10 @@ Este projeto já está preparado para o Supabase. Para ligar a aplicação ao ba
 
 O arquivo `config.js` deste pacote já contém a conexão do projeto Supabase configurado para esta instalação. Para conectar outro projeto, use os valores dele. A chave **Publishable** é feita para uso no navegador. As tabelas deste projeto usam Row Level Security (RLS) para restringir o acesso aos usuários cadastrados em `team_members`.
 
+### Atualização para links úteis e lembretes
+
+Antes de publicar a versão atualizada, abra o **SQL Editor** do mesmo projeto Supabase e execute novamente o arquivo `schema.sql` atualizado. Ele cria as tabelas `useful_links` e `reminders` e suas permissões, mantendo os registros existentes. Depois envie os arquivos atualizados ao GitHub.
+
 > Nunca coloque a chave secreta `service_role`, senhas ou outras credenciais privadas no código ou no GitHub.
 
 ## Publicação no GitHub Pages
@@ -65,6 +74,7 @@ O arquivo `config.js` deste pacote já contém a conexão do projeto Supabase co
 4. Quando o GitHub Pages mostrar o endereço do site, copie-o.
 5. No Supabase, abra **Authentication → URL Configuration**. Configure o endereço publicado em **Site URL** e adicione-o também em **Redirect URLs**.
 6. Abra o site publicado nos dois computadores e entre com os logins individuais.
+7. Depois da atualização, use **Links úteis** para salvar sites e **Lembretes** para criar rotinas diárias ou mensais.
 
 ## Como usar
 

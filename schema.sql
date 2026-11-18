@@ -38,10 +38,35 @@ create table if not exists public.app_settings (
 );
 insert into public.app_settings (id) values (1) on conflict (id) do nothing;
 
+create table if not exists public.useful_links (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  url text not null,
+  note text not null default '',
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.reminders (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  frequency text not null check (frequency in ('daily','monthly')),
+  day_of_month smallint check (day_of_month between 1 and 31),
+  last_completed_on date,
+  active boolean not null default true,
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check ((frequency = 'daily' and day_of_month is null) or (frequency = 'monthly' and day_of_month is not null))
+);
+
 alter table public.team_members enable row level security;
 alter table public.entries enable row level security;
 alter table public.handoff_notes enable row level security;
 alter table public.app_settings enable row level security;
+alter table public.useful_links enable row level security;
+alter table public.reminders enable row level security;
 
 -- Permite executar este arquivo novamente sem falhar em políticas já existentes.
 drop policy if exists "team members can read team" on public.team_members;
@@ -54,6 +79,14 @@ drop policy if exists "team members can read handoff notes" on public.handoff_no
 drop policy if exists "team members can create handoff notes" on public.handoff_notes;
 drop policy if exists "team members can read settings" on public.app_settings;
 drop policy if exists "team members can update settings" on public.app_settings;
+drop policy if exists "team members can read useful links" on public.useful_links;
+drop policy if exists "team members can create useful links" on public.useful_links;
+drop policy if exists "team members can update useful links" on public.useful_links;
+drop policy if exists "team members can delete useful links" on public.useful_links;
+drop policy if exists "team members can read reminders" on public.reminders;
+drop policy if exists "team members can create reminders" on public.reminders;
+drop policy if exists "team members can update reminders" on public.reminders;
+drop policy if exists "team members can delete reminders" on public.reminders;
 
 create policy "members can read own profile" on public.team_members for select to authenticated
   using (user_id = auth.uid());
@@ -75,17 +108,37 @@ create policy "team members can read settings" on public.app_settings for select
 create policy "team members can update settings" on public.app_settings for update to authenticated
   using (exists (select 1 from public.team_members me where me.user_id = auth.uid()))
   with check (exists (select 1 from public.team_members me where me.user_id = auth.uid()));
+create policy "team members can read useful links" on public.useful_links for select to authenticated
+  using (exists (select 1 from public.team_members me where me.user_id = auth.uid()));
+create policy "team members can create useful links" on public.useful_links for insert to authenticated
+  with check (exists (select 1 from public.team_members me where me.user_id = auth.uid()));
+create policy "team members can update useful links" on public.useful_links for update to authenticated
+  using (exists (select 1 from public.team_members me where me.user_id = auth.uid()))
+  with check (exists (select 1 from public.team_members me where me.user_id = auth.uid()));
+create policy "team members can delete useful links" on public.useful_links for delete to authenticated
+  using (exists (select 1 from public.team_members me where me.user_id = auth.uid()));
+create policy "team members can read reminders" on public.reminders for select to authenticated
+  using (exists (select 1 from public.team_members me where me.user_id = auth.uid()));
+create policy "team members can create reminders" on public.reminders for insert to authenticated
+  with check (exists (select 1 from public.team_members me where me.user_id = auth.uid()));
+create policy "team members can update reminders" on public.reminders for update to authenticated
+  using (exists (select 1 from public.team_members me where me.user_id = auth.uid()))
+  with check (exists (select 1 from public.team_members me where me.user_id = auth.uid()));
+create policy "team members can delete reminders" on public.reminders for delete to authenticated
+  using (exists (select 1 from public.team_members me where me.user_id = auth.uid()));
 
 grant select on public.team_members to authenticated;
 grant select, insert, update, delete on public.entries to authenticated;
 grant select, insert on public.handoff_notes to authenticated;
 grant select, update on public.app_settings to authenticated;
+grant select, insert, update, delete on public.useful_links to authenticated;
+grant select, insert, update, delete on public.reminders to authenticated;
 
 -- Ativa atualização em tempo real para os dois computadores.
 do $$
 declare table_name text;
 begin
-  foreach table_name in array array['entries','handoff_notes','app_settings'] loop
+  foreach table_name in array array['entries','handoff_notes','app_settings','useful_links','reminders'] loop
     if not exists (
       select 1 from pg_publication_tables
       where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = table_name
